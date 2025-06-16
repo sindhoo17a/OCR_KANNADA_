@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Enhanced Extracted Text Viewer</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+      crossorigin="anonymous"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Code+Pro:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* --- Enhanced CSS Variables --- */
+      :root {
+        /* Primary Palette (Softer Blue) */
+        --primary-50: #eff6ff;
+        --primary-100: #dbeafe;
+        --primary-500: #3b82f6; /* Main primary color */
+        --primary-600: #2563eb; /* Darker shade for hover */
+        --primary-700: #1d4ed8;
+
+        /* Secondary Palette (Neutral Gray) */
+        --secondary-50: #f9fafb;
+        --secondary-100: #f3f4f6;
+        --secondary-200: #e5e7eb;
+        --secondary-300: #d1d5db;
+        --secondary-500: #6b7280; /* Main secondary color */
+        --secondary-700: #374151;
+        --secondary-900: #111827; /* Darkest text */
+
+       
+        --accent-50: #ecfdf5;
+        --accent-400: #34d399;
+        --accent-500: #10b981; 
+        --accent-600: #059669;
+
+        /* Warning Palette (Amber) */
+        --warning-100: #fffbeb;
+        --warning-400: #fbbf24;
+        --warning-500: #f59e0b; 
+        --warning-600: #d97706;
+        --warning-900: #78350f;
+
+        /* Info Palette (Sky Blue) */
+        --info-100: #e0f2fe;
+        --info-700: #0369a1;
+        --info-border: #bae6fd;
+
+        /* Highlight */
+        --highlight-bg: var(--warning-100);
+        --highlight-text: var(--warning-900);
+        --highlight-border: var(--warning-400);
+
+        /* Base Styles */
+        --base-bg: linear-gradient(
+          180deg,
+          var(--secondary-50) 0%,
+          var(--secondary-100) 100%
+        );
+        --card-bg: #ffffff;
+        --text-color: var(--secondary-900);
+        --text-muted: var(--secondary-500);
+        --border-color: var(--secondary-200);
+        --border-radius-lg: 0.875rem; /* Slightly larger radius */
+        --border-radius-md: 0.5rem;
+        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.04);
+        --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.07),
+          0 2px 4px -2px rgb(0 0 0 / 0.05);
+        --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08),
+          0 4px 6px -4px rgb(0 0 0 / 0.06);
+        --focus-ring-color: rgba(
+          59,
+          130,
+          246,
+          0.25
+        ); /* primary-500 with alpha */
+      }
+
+      /* --- Base Styles --- */
+      body {
+        font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        background: var(--base-bg);
+        color: var(--text-color);
+        padding-top: 3rem;
+        padding-bottom: 5rem;
+        font-size: 1rem; /* 16px base */
+        line-height: 1.6;
+      }
+
+      /* --- Card Styles --- */
+      .search-card,
+      .result-card {
+        margin-top: 2rem; /* Original spacing was fine */
+        margin-bottom: 3rem; /* Add more space below cards */
+        box-shadow: var(--shadow-md);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-lg);
+        background-color: var(--card-bg);
+        transition: box-shadow 0.3s ease-in-out;
+        overflow: hidden; /* Ensure child borders don't leak */
+      }
+      .search-card:hover,
+      .result-card:hover {
+        box-shadow: var(--shadow-lg);
+      }
+
+      .card-header {
+        background-color: var(--secondary-50);
+        border-bottom: 1px solid var(--border-color);
+        font-weight: 600; /* Semi-bold header */
+        padding: 1.25rem 2rem; /* Increased padding */
+        display: flex;
+        align-items: center;
+        gap: 0.75rem; /* Space between icon and title */
+        color: var(--secondary-700);
+        font-size: 1.125rem; /* Slightly larger header text */
+      }
+      .card-header .bi {
+        font-size: 1.25rem; /* Larger icon in header */
+        color: var(--primary-500); /* Color the header icon */
+      }
+
+      .card-body {
+        padding: 2rem; /* Increased padding */
+      }
+
+      /* --- Text Area (`pre`) --- */
+      pre#ocr-text {
+        background-color: var(--secondary-50); /* Subtle contrast */
+        padding: 1.5rem;
+        border: 1px solid var(--border-color);
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        max-height: 65vh; /* Generous height */
+        overflow-y: auto;
+        border-radius: var(--border-radius-md);
+        font-family: "Source Code Pro", monospace; /* Monospace for code/text */
+        font-size: 0.95rem;
+        line-height: 1.7;
+        color: var(--secondary-700); /* Slightly softer than black */
+        /* Custom scrollbar (optional, WebKit browsers) */
+        scrollbar-width: thin;
+        scrollbar-color: var(--secondary-300) var(--secondary-100);
+      }
+      pre#ocr-text::-webkit-scrollbar {
+        width: 8px;
+      }
+      pre#ocr-text::-webkit-scrollbar-track {
+        background: var(--secondary-100);
+        border-radius: 4px;
+      }
+      pre#ocr-text::-webkit-scrollbar-thumb {
+        background-color: var(--secondary-300);
+        border-radius: 4px;
+        border: 2px solid var(--secondary-100);
+      }
+      pre#ocr-text::-webkit-scrollbar-thumb:hover {
+        background-color: var(--secondary-500);
+      }
+
+      /* --- Search & Highlight --- */
+      .highlight {
+        background-color: var(--highlight-bg);
+        color: var(--highlight-text);
+        padding: 0.15em 0.35em;
+        border-radius: 4px;
+        font-weight: 500; /* Slightly less bold */
+        box-shadow: 0 0 0 1px var(--highlight-border);
+        margin: -1px; /* Prevent layout shift from border */
+        display: inline; /* Ensure it behaves well inline */
+      }
+
+      #search-input {
+        border-radius: var(--border-radius-md) 0 0 var(--border-radius-md);
+        border: 1px solid var(--border-color);
+        padding: 0.75rem 1.25rem; /* More padding */
+        font-size: 1rem;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      }
+      #search-input:focus {
+        border-color: var(--primary-500);
+        box-shadow: 0 0 0 0.25rem var(--focus-ring-color);
+        outline: none; /* Remove default outline */
+      }
+
+      /* Adjust input group styles for new radius */
+      .input-group {
+        box-shadow: var(--shadow-sm); /* Add subtle shadow to group */
+        border-radius: var(--border-radius-md);
+      }
+      .input-group .btn {
+        border-radius: 0;
+        border-width: 1px 1px 1px 0; /* Ensure consistent border */
+        border-color: var(--border-color);
+        padding: 0.75rem 1.25rem;
+      }
+      .input-group .btn:last-child {
+        border-radius: 0 var(--border-radius-md) var(--border-radius-md) 0;
+      }
+      /* Remove left border from input group buttons if they follow input */
+      .input-group > .form-control + .btn {
+        border-left: 0;
+      }
+
+      #search-status {
+        margin-top: 1rem;
+        font-size: 0.9rem;
+        color: var(--text-muted);
+        min-height: 1.5em; /* Prevent layout shifts */
+      }
+
+      /* --- Buttons --- */
+      .btn {
+        padding: 0.7rem 1.4rem;
+        font-weight: 500;
+        border-radius: var(--border-radius-md);
+        transition: all 0.25s ease-in-out;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        border: 1px solid transparent;
+        box-shadow: var(--shadow-sm);
+        line-height: 1.5; /* Ensure text vertical alignment */
+      }
+      .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+      }
+      .btn:focus-visible {
+        outline: none;
+        box-shadow: var(--shadow-sm), 0 0 0 0.25rem var(--focus-ring-color);
+      }
+      .btn:active {
+        transform: translateY(0px);
+        box-shadow: var(--shadow-sm);
+      }
+      .btn .bi {
+        font-size: 1.1em; /* Slightly larger icons in buttons */
+        vertical-align: -0.1em; /* Fine-tune icon alignment */
+      }
+
+      /* Specific Button Colors */
+      .btn-primary {
+        background-color: var(--primary-500);
+        border-color: var(--primary-500);
+        color: white;
+      }
+      .btn-primary:hover {
+        background-color: var(--primary-600);
+        border-color: var(--primary-600);
+        color: white; /* Ensure text remains white */
+      }
+
+      /* Changed Upload Another to outline style */
+      .btn-outline-secondary {
+        background-color: transparent;
+        border-color: var(--secondary-300);
+        color: var(--secondary-700);
+      }
+      .btn-outline-secondary:hover {
+        background-color: var(--secondary-100);
+        border-color: var(--secondary-500);
+        color: var(--secondary-900);
+      }
+
+      .btn-accent {
+        background-color: var(--accent-500);
+        border-color: var(--accent-500);
+        color: white;
+      }
+      .btn-accent:hover {
+        background-color: var(--accent-600);
+        border-color: var(--accent-600);
+        color: white;
+      }
+
+      .btn-warning {
+        background-color: var(--warning-500);
+        border-color: var(--warning-500);
+        color: var(--warning-900); /* Dark text for yellow */
+      }
+      .btn-warning:hover {
+        background-color: var(--warning-600);
+        border-color: var(--warning-600);
+        color: var(--warning-900);
+      }
+
+      /* --- Action Buttons Area --- */
+      .action-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem; /* Slightly more gap */
+        margin-top: 2rem; /* More space above buttons */
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border-color);
+      }
+
+      /* --- Utility --- */
+      .alert-info {
+        background-color: var(--info-100);
+        border-color: var(--info-border);
+        color: var(--info-700);
+        border-radius: var(--border-radius-md);
+        padding: 1rem 1.25rem; /* Standard alert padding */
+      }
+      .alert-info .bi {
+        vertical-align: -0.15em; /* Align icon better */
+        margin-right: 0.5rem;
+      }
+      .download-unavailable {
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.7rem 0; /* Match button vertical space */
+      }
+      .download-unavailable i {
+        font-style: normal; /* Override italic if needed */
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container-lg mt-4 mb-5">
+      <div class="card search-card">
+        <div class="card-header">
+          <i class="bi bi-search"></i> Search Within Text
+        </div>
+        <div class="card-body">
+          <div class="input-group">
+            <input
+              type="search"
+              id="search-input"
+              class="form-control"
+              placeholder="Enter term to highlight..."
+              aria-label="Search term"
+            />
+            <button class="btn btn-accent" type="button" id="search-button">
+              <i class="bi bi-binoculars-fill"></i> Search
+            </button>
+            <button class="btn btn-warning" type="button" id="clear-button">
+              <i class="bi bi-x-lg"></i> Clear
+            </button>
+          </div>
+          <div id="search-status"></div>
+        </div>
+      </div>
+
+      <div class="card result-card">
+        <div class="card-header">
+          <i class="bi bi-file-earmark-text"></i> Extracted Text
+        </div>
+        <div class="card-body">
+          {% if fallback_used %}
+          <div
+            class="alert alert-info d-flex align-items-center mb-4"
+            role="alert"
+          >
+            <i class="bi bi-info-circle-fill flex-shrink-0"></i>
+            <div>
+              <strong>Note:</strong> Primary extraction may have encountered
+              issues. Showing result from fallback OCR.
+            </div>
+          </div>
+          {% endif %}
+
+          <pre id="ocr-text">{{ text }}</pre>
+
+          <div class="action-buttons">
+            {% if filename %}
+            <a
+              href="{{ url_for('download_file', filename=filename) }}"
+              class="btn btn-primary"
+              download
+            >
+              <i class="bi bi-download"></i> Download Text
+            </a>
+            {% else %}
+            <span class="download-unavailable">
+              <i class="bi bi-slash-circle"></i>
+              <i>Download not available</i>
+            </span>
+            {% endif %}
+
+            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+              <i class="bi bi-arrow-left"></i> Upload Another File
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+      crossorigin="anonymous"
+    ></script>
+
+    <script>
+      const searchInput = document.getElementById("search-input");
+      const searchButton = document.getElementById("search-button");
+      const clearButton = document.getElementById("clear-button");
+      const textContainer = document.getElementById("ocr-text");
+      const searchStatus = document.getElementById("search-status");
+      const originalTextContent = textContainer.innerHTML; // Store original HTML
+
+      function escapeRegExp(string) {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      }
+
+      function performSearch() {
+        const searchTerm = searchInput.value.trim();
+        textContainer.innerHTML = originalTextContent; // Reset highlights
+        searchStatus.textContent = "";
+
+        if (!searchTerm) {
+          searchStatus.textContent = "Please enter a term to search.";
+          setTimeout(() => {
+            if (searchStatus.textContent === "Please enter a term to search.")
+              searchStatus.textContent = "";
+          }, 2000);
+          return;
+        }
+
+        try {
+          const escapedSearchTerm = escapeRegExp(searchTerm);
+          const regex = new RegExp(escapedSearchTerm, "gi"); // g=global, i=case-insensitive
+          let matchCount = 0;
+
+          const newHTML = originalTextContent.replace(regex, (match) => {
+            matchCount++;
+            return `<span class="highlight">${match}</span>`;
+          });
+
+          if (matchCount > 0) {
+            textContainer.innerHTML = newHTML;
+            searchStatus.textContent = `${matchCount} match(es) found for "${searchTerm}".`;
+          } else {
+            searchStatus.textContent = `No matches found for "${searchTerm}".`;
+          }
+        } catch (error) {
+          console.error("Error during search:", error);
+          searchStatus.textContent = "An error occurred during the search.";
+          
+        }
+      }
+
+      function clearSearch() {
+        textContainer.innerHTML = originalTextContent;
+        searchInput.value = "";
+        searchStatus.textContent = "";
+        searchInput.focus();
+      }
+
+      searchButton.addEventListener("click", performSearch);
+      clearButton.addEventListener("click", clearSearch);
+
+      searchInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          performSearch();
+        } else if (event.key === "Escape") {
+          // Clear search if input has value, otherwise blur
+          if (searchInput.value) {
+            clearSearch();
+          } else {
+            searchInput.blur();
+          }
+        }
+      });
+    </script>
+  </body>
+</html>
